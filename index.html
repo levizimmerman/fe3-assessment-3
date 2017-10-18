@@ -1,3 +1,4 @@
+<!-- Inspiration: http://www.tylernwolf.com/?utm_source=d3_org&utm_medium=demo_link&utm_campaign=d3_website#/portfolio/corrdisp -->
 <!DOCTYPE html>
 <html lang="en">
 
@@ -10,7 +11,22 @@
 </head>
 
 <body>
-  <h1>Sample data</h1>
+  <header id="timeFilter"></header>
+  <main>
+    <div>
+      <svg id="stepCount" width="600" height="150"></svg>
+    </div>
+    <div>
+      <svg id="flightsClimbed" width="600" height="150"></svg>
+    </div>
+    <div>
+      <svg id="distanceWalkingRunning" width="600" height="150"></svg>
+    </div>
+    <div>
+      <svg id="sleepCycle" width="600" height="250"></svg>
+    </div>
+  </main>
+  <!-- <h1>Sample data</h1>
   <div class="loader">
     A moment please, Loading data...
     <div class="spinner">
@@ -20,8 +36,14 @@
       <div class="rect4"></div>
       <div class="rect5"></div>
     </div>
-  </div>
+  </div> -->
   <script src="./d3.js"></script>
+  <script src="./moment.js"></script>
+  <script src="./shared/events.js"></script>
+  <script src="./shared/utils.js"></script>
+  <script src="./shared/timeFilter.js"></script>
+  <script src="./graphs/BarChart.js"></script>
+  <script src="./graphs/SleepCycle.js"></script>
   <script src="./index.js"></script>
 </body>
 

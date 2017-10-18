@@ -1,16 +1,30 @@
 var types = [];
 var parseTime = d3.timeParse('%Y-%m-%d %H:%M:%S %Z');
+var u = new Utils();
+var t;
 
 /*
-* Events listeners
-*/
+ * Events listeners
+ */
 window.addEventListener('load', handleWindowLoad);
+
+/*
+ * Subscriptions
+ */
+Events.on('data/load/done', handleDataLoadDone);
+Events.on('data/map/done', handleDataMapDone);
+Events.on('data/load/sleepcycle/done', handleSleepDataLoad);
 
 /*
  * Handles window load event
  */
 function handleWindowLoad() {
   loadData();
+  t = new TimeFilter('timeFilter');
+}
+
+function handleDataLoadDone(data) {
+
 }
 
 function loadData() {
@@ -34,57 +48,113 @@ function mapData(error, data) {
       creationDate: parseTime(record.getAttribute('creationDate'))
     }
   });
-  var stepCountData = getStepCountData(data);
-  var distanceWalkingRunningData = getDistanceWalkingRunningData(data);
-  var flightsClimbedData = getFlightsClimbedData(data);
-  var sleepAnalysisData = getSleepAnalysisData(data);
-  var groupedData = [
-    stepCountData,
-    distanceWalkingRunningData,
-    flightsClimbedData,
-    sleepAnalysisData
-  ];
-  groupedData.forEach(function(data){
-    createTable(data, 10);
+
+  Events.emit('data/map/done', {
+    data: data
   });
-  var loader = document.querySelector('.loader');
-  loader.classList.add('hide');
 }
 
-function createTable(data, maxRows) {
-  var body = document.querySelector('body');
-  var heading = document.createElement('h2');
-  var table = document.createElement('table');
-  var thead = document.createElement('thead');
-  var theadTr = document.createElement('tr');
-  var tbody = document.createElement('tbody');
-  heading.textContent = data[0].type;
-  for (var prop in data[0]) {
-    var theadTd = document.createElement('td');
-    theadTd.textContent = prop;
-    theadTr.appendChild(theadTd);
-  }
-  thead.appendChild(theadTr);
-  for (var i = 0; maxRows > i; i++) {
-    var tbodyTr = document.createElement('tr');
-    for (var prop in data[0]) {
-      var tbodyTd = document.createElement('td');
-      tbodyTd.textContent = data[i][prop];
-      tbodyTr.appendChild(tbodyTd);
-    }
-    tbody.appendChild(tbodyTr);
-  }
-  table.appendChild(thead);
-  table.appendChild(tbody);
-  body.appendChild(heading);
-  body.appendChild(table);
+function handleDataMapDone(data) {
+  var sleepAnalysisData = getSleepAnalysisData(data.data);
+
+  /*
+   * Sleep analysis
+   */
+  var sleepAnalysisDataTransformed = u.createSleepCyclePerDay(sleepAnalysisData, [21, 3], [5, 11]);
+  var maxDate = u.getMaxDate(sleepAnalysisDataTransformed);
+  var defaultRange = u.getDefaultRange(maxDate, 'month')
+  var sleepAnalysisDataFiltered = u.filterDataOnDate(defaultRange.startDate, defaultRange.endDate, sleepAnalysisDataTransformed);
+  var SleepAnalysisSleepCycle = new SleepCycle({
+    data: sleepAnalysisDataFiltered,
+    selector: '#sleepCycle',
+    type: 'sleepCycle',
+    startDate: defaultRange.startDate,
+    endDate: defaultRange.endDate,
+    minTime: u.getMinTime(sleepAnalysisDataFiltered, 3),
+    maxTime: u.getMaxTime(sleepAnalysisDataFiltered),
+    yLabel: 'Hours'
+  });
+
+  Events.emit('data/load/sleepcycle/done', {
+    minDate: defaultRange.startDate,
+    maxDate: defaultRange.endDate,
+    data: data.data
+  });
+}
+
+/*
+* Handles sleep data load event
+*
+* - Loads step count data.
+* - Draws step count barchart.
+* - Loads walking running distance data.
+* - Draws walking running distance barchart.
+* - Loads flights climbed data.
+* - Draws flights climbed barchart.
+*/
+function handleSleepDataLoad(data) {
+  var stepCountData = getStepCountData(data.data);
+  var distanceWalkingRunningData = getDistanceWalkingRunningData(data.data);
+  var flightsClimbedData = getFlightsClimbedData(data.data);
+
+  /*
+   * Step count
+   */
+  var stepCountDataTransformed = u.mergeDataPerDay(stepCountData, 'stepCount');
+  var stepCountDataFiltered = u.filterDataOnDate(data.minDate, data.maxDate, stepCountDataTransformed);
+  var StepCountBarChart = new BarChart({
+    data: stepCountDataFiltered,
+    selector: '#stepCount',
+    type: 'stepCount',
+    startDate: data.minDate,
+    endDate: data.maxDate,
+    maxValue: u.getMaxValue(stepCountDataFiltered),
+    yLabel: 'Steps',
+    gradientStartColor: '#3DE8F8',
+    gradientStopColor: '#00233A'
+  });
+
+  /*
+   * Walking distance
+   */
+  var distanceWalkingRunningDataTransformed = u.mergeDataPerDay(distanceWalkingRunningData, 'walkingRunningDistance');
+  var distanceWalkingRunningDataFiltered = u.filterDataOnDate(data.minDate, data.maxDate, distanceWalkingRunningDataTransformed);
+  var DistanceWalkingRunningBarChart = new BarChart({
+    data: distanceWalkingRunningDataFiltered,
+    selector: '#distanceWalkingRunning',
+    type: 'walkingRunningDistance',
+    startDate: data.minDate,
+    endDate: data.maxDate,
+    maxValue: u.getMaxValue(distanceWalkingRunningDataFiltered),
+    yLabel: 'Distance Walking or Running',
+    gradientStartColor: '#73F551',
+    gradientStopColor: '#023C00'
+  });
+
+  /*
+   * Flights climbed
+   */
+  var flightsClimbedDataTransformed= u.mergeDataPerDay(flightsClimbedData, 'flightsClimbed');
+  var flightsClimbedDataFiltered = u.filterDataOnDate(data.minDate, data.maxDate, flightsClimbedDataTransformed);
+  var FlightsClimbedBarChart = new BarChart({
+    data: flightsClimbedDataFiltered,
+    selector: '#flightsClimbed',
+    type: 'flightsClimbed',
+    startDate: data.minDate,
+    endDate: data.maxDate,
+    maxValue: u.getMaxValue(flightsClimbedDataFiltered),
+    yLabel: 'Flights climbed',
+    gradientStartColor: '#C962F7',
+    gradientStopColor: '#180038'
+  });
+
+  Events.emit('data/load/done');
 }
 
 function getStepCountData(data) {
   return data.filter(function(row) {
     return row.type === 'StepCount';
   });
-
 }
 
 function getDistanceWalkingRunningData(data) {
