@@ -278,7 +278,93 @@ function handleTimeFilterNav() {
 ```
 
 #### Hover the bar
+`mouseover` Events listeners are added to every bar in each chart. Within the handler function bound to the event listener an event is emitted using [Events.js][u_events]. The events looks as follows:
+```javascript
+Events.emit('bar/on/mouseover', {
+  point: data
+});
+```
 
+The variable `data` is the data passed from the bar element which is hovered. This data object has a date in it. This date is used to call other bars that have same date. Then in their turn these bars will display their detailed information. Every instance ([BarChart][u_barchart] and [SleepCycle][u_sleepcycle]) is subscribed to the `bar/on/mouseover` event.
+
+##### BarChart.js bar mouseover event subscription
+```javascript
+/*
+ * Marks .bar element when is hovered over
+ * Also marks bar when a corresponding bar in another chart is hovered over.
+ * Adds text label above the bar
+ */
+function markBar(data) {
+  var bar = self.svg.select('[data-date="' + data.point.key + '"]')
+    .classed('active', true);
+  self.svg.append('text')
+    .attr('x', xTextPosition.bind(data.point))
+    .attr('y', yTextPosition.bind(data.point))
+    .attr('text-anchor', 'middle')
+    .attr('class', 'bar-label')
+    .text(getTextLabel.bind(data.point));
+}
+```
+The bar is marked by adding a `active` classname. Then a `<text>` element is added to hold detailed information about the bar. This detailed information is the exact value of bar and the percentage the value differs from the mean of the whole chart.
+```javascript
+/*
+ * Returns text label content
+ * Uses queryDataByKey() to ensure it gets the value of this instance
+ */
+function getTextLabel() {
+  var data = queryDataByKey(this.key);
+  if (!data) {
+    return;
+  }
+  var value = u.round(data.value, 2);
+  var mean = u.round(getMean(), 2);
+  var diff = u.round((value / mean) * 100 - 100, 0);
+  var text = '+' + diff + '%' + ' (' + value + ')';
+  if (diff < 0) {
+    text = diff + '%' + ' (' + value + ')';
+  }
+  return text;
+}
+```
+
+##### SleepCycle.js bar mouseover event subscription
+```javascript
+/*
+ * Adds text element above bar element display detailed information
+ */
+function showDataOnBar(data) {
+  var bar = self.svg.select('[data-date="' + data.point.key + '"]')
+    .classed('active', true);
+  self.svg.append('text')
+    .attr('x', xTextPosition.bind(data.point))
+    .attr('y', yTextPosition.bind(data.point))
+    .attr('text-anchor', 'middle')
+    .attr('class', 'bar-label')
+    .text(getTextLabel.bind(data.point));
+}
+```
+The bar is marked by adding a `active` classname. Then a `<text>` element is added to hold detailed information about the bar. This detailed information is the time slept and the percentage the slept time differs from the slept mean of the whole chart.
+```javascript
+/*
+ * Returns text content
+ * - Gets mean of time slept
+ * - Creates percent differnce of mean value
+ * - if is positive percent return '+' + text otherwise default number which is negative
+ */
+function getTextLabel() {
+  var data = queryDataByKey(this.key);
+  if (!data) {
+    return;
+  }
+  var mean = sleptMean();
+  var percent = u.round((data.value[0].slept / mean) * 100 - 100, 1);
+  var text = '+' + percent + '% (' + data.value[0].slept + ')';
+  if (percent < 0) {
+    text = percent + '% (' + data.value[0].slept + ')';
+  }
+  return text;
+}
+```
 
 ## Dependencies
 This project has a couple of dependencies listed below. These dependencies are mandatory to get the code running without bugs. There are other includes in this project, but are not required to get the code working.
@@ -296,7 +382,83 @@ This project has a couple of dependencies listed below. These dependencies are m
 
 ## Features
 
+### D3
+* [`select()`](https://github.com/d3/d3-selection/blob/master/README.md#select) - select an element from the document.
+* [`attr()`](https://github.com/d3/d3-selection/blob/master/README.md#selection_attr) - get or set an attribute.
+* [`scaleTime()`](https://github.com/d3/d3-scale/blob/master/README.md#scaleTime) - create a linear scale for time.
+* [`range()`](https://github.com/d3/d3-scale/blob/master/README.md#time_range) - set the output range.
+* [`domain()`](https://github.com/d3/d3-scale/blob/master/README.md#continuous_domain) -  set the input domain.
+* [`nice()`](https://github.com/d3/d3-scale/blob/master/README.md#continuous_nice) - extend the domain to nice round numbers.
+* [`selectAll()`](https://github.com/d3/d3-selection/blob/master/README.md#selectAll) - select multiple elements from the document.
+* [`transition()`](https://github.com/d3/d3-transition/blob/master/README.md#transition) - schedule a transition on the root document element.
+* [`duration()`](https://github.com/d3/d3-transition/blob/master/README.md#transition_duration) - specify per-element duration in milliseconds.
+* [`call()`](https://github.com/d3/d3-selection/blob/master/README.md#selection_call) - call a function with this selection.
+* [`ticks()`](https://github.com/d3/d3-array/blob/master/README.md#ticks) - generate representative values from a numeric interval.
+* [`tickFormat()`](https://github.com/d3/d3-axis/blob/master/README.md#axis_tickFormat) - set the tick format explicitly.
+* [`timeFormat()`](https://github.com/d3/d3-time-format/blob/master/README.md#timeFormat) - alias for locale.format on the default locale.
+* [`timeDay`](https://github.com/d3/d3-time/blob/master/README.md#timeDay) - the day interval.
+* [`axisBottom()`](https://github.com/d3/d3-axis/blob/master/README.md#axisBottom) - create a new bottom-oriented axis generator.
+* [`data()`](https://github.com/d3/d3-selection/blob/master/README.md#selection_data) - join elements to data.
+* [`enter()`](https://github.com/d3/d3-selection/blob/master/README.md#selection_enter) - get the enter selection (data missing elements).
+* [`exit()`](https://github.com/d3/d3-selection/blob/master/README.md#selection_exit) - get the exit selection (elements missing data).
+* [`text()`](https://github.com/d3/d3-selection/blob/master/README.md#selection_text) - get or set the text content.
+* [`remove()`](https://github.com/d3/d3-selection/blob/master/README.md#selection_remove) - remove elements from the document.
+* [`mean()`](https://github.com/d3/d3-array/blob/master/README.md#mean) - compute the arithmetic mean of an array of numbers.
+* [`sum()`](https://github.com/d3/d3-array/blob/master/README.md#sum) - compute the sum of an array of numbers..
+* [`classed()`](https://github.com/d3/d3-selection/blob/master/README.md#selection_classed) - get, add or remove CSS classes.
+* [`scaleLinear()`](https://github.com/d3/d3-scale/blob/master/README.md#scaleLinear) - create a quantitative linear scale.
+* [`rangeRound()`](https://github.com/d3/d3-scale/blob/master/README.md#continuous_rangeRound) - set the output range and enable rounding.
+* [`on()`](https://github.com/d3/d3-selection/blob/master/README.md#selection_on) - add or remove event listeners.
+* [`min()`](https://github.com/d3/d3-array/blob/master/README.md#min) - compute the minimum value in an array.
+* [`max()`](https://github.com/d3/d3-array/blob/master/README.md#max) - compute the maximum value in an array.
+* [`xml()`](https://github.com/d3/d3-request/blob/master/README.md#xml) - get an XML file.
+* [`nest()`](https://github.com/d3/d3-collection/blob/master/README.md#nest) - create a new nest generator.
+* [`key()`](https://github.com/d3/d3-collection/blob/master/README.md#nest_key) - add a level to the nest hierarchy.
+* [`rollup()`](https://github.com/d3/d3-collection/blob/master/README.md#nest_rollup) - specify a rollup function for leaf values.
+* [`entries()`](https://github.com/d3/d3-collection/blob/master/README.md#nest_entries) - generate the nest, returning an array of key-values tuples.
+
+### MomentJS
+* [`format()`](https://momentjs.com/docs/) - Format string based on format string.
+* [`clone()`](https://momentjs.com/docs/#/durations/clone/) - Clone a moment instance.
+* [`subtract()`](https://momentjs.com/docs/#/manipulating/subtract/) - Subtract amount and type of time.
+* [`add()`](https://momentjs.com/docs/#/durations/add/) - Add amount and type of time.
+* [`toDate()`](https://momentjs.com/docs/#/displaying/as-javascript-date/) - Convert moment to JS Date object.
+
+### Events
+* [`.on()`][u_events] - Subscribe to event type.
+* [`.emit()`][u_events] - Publish event type.
+
+### JavaScript
+* [`getHours()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/getHours) - The getHours() method returns the hour for the specified date, according to local time.
+* [`getMinutes()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/getMinutes) - The getMinutes() method returns the minutes in the specified date according to local time.
+* [`setHours()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/setHours) - The setHours() method sets the hours for a specified date according to local time, and returns the number of milliseconds since 1 January 1970 00:00:00 UTC until the time represented by the updated Date instance.
+* [`setMinutes()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/setMinutes) - The setMinutes() method sets the minutes for a specified date according to local time.
+* [`setDate()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/setDate) - The setDate() method sets the day of the Date object relative to the beginning of the currently set month.
+* [`https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/getDate()`]() - The getDate() method returns the day of the month for the specified date according to local time.
+* [`toLocaleDateString()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toLocaleDateString) - The toLocaleDateString() method returns a string with a language sensitive representation of the date portion of this date.
+* [`Object.assign()`](https://developer.mozilla.org/nl/docs/Web/JavaScript/Reference/Global_Objects/Object/assign) - The Object.assign() method is used to copy the values of all enumerable own properties from one or more source objects to a target object. It will return the target object.
+* [`bind()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind) - The bind() method creates a new function that, when called, has its this keyword set to the provided value, with a given sequence of arguments preceding any provided when the new function is called.
+* [`find()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/find) - The find() method returns the value of the first element in the array that satisfies the provided testing function.
+* [`getElementById()`](https://developer.mozilla.org/en-US/docs/Web/API/Document/getElementById) - Returns a reference to the element by its ID; the ID is a string which can be used to uniquely identify the element, found in the HTML id attribute.
+* [`createElement()`](https://developer.mozilla.org/en-US/docs/Web/API/Document/createElement) - In an HTML document, the Document.createElement() method creates the HTML element specified by tagName, or an HTMLUnknownElement.
+* [`setAttribute()`](https://developer.mozilla.org/en-US/docs/Web/API/Element/setAttribute) - Sets the value of an attribute on the specified element.
+* [`addEventListener()`](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener) - The EventTarget.addEventListener() method adds the specified EventListener-compatible object to the list of event listeners for the specified event type on the EventTarget on which it is called.
+* [`appendChild()`](https://developer.mozilla.org/en-US/docs/Web/API/Node/appendChild) - The Node.appendChild() method adds a node to the end of the list of children of a specified parent node.
+* [`querySelectorAll()`](https://developer.mozilla.org/en-US/docs/Web/API/ParentNode/querySelectorAll) - Returns a NodeList representing a list of elements with the current element as root that matches the specified group of selectors.
+* [`contains()`](https://developer.mozilla.org/en-US/docs/Web/API/Node/contains) - The Node.contains() method returns a Boolean value indicating whether a node is a descendant of a given node or not.
+* [`remove()`](https://developer.mozilla.org/en-US/docs/Web/API/ChildNode/remove) - The ChildNode.remove() method removes the object from the tree it belongs to.
+* [`add()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set/add) - The add() method appends a new element with a specified value to the end of a Set object.
+* [`querySelector()`](https://developer.mozilla.org/en-US/docs/Web/API/Document/querySelector) - Returns the first Element within the document that matches the specified selector, or group of selectors, or null if no matches are found.
+* [`split()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/split) - The split() method splits a String object into an array of strings by separating the string into substrings, using a specified separator string to determine where to make each split.
+* [`filter()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter) - The filter() method creates a new array with all elements that pass the test implemented by the provided function.
+* [`map()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map) - The map() method creates a new array with the results of calling a provided function on every element in the calling array.
+* [`indexOf()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/indexOf) - The indexOf() method returns the first index at which a given element can be found in the array, or -1 if it is not present.
+* [`slice()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/slice) - The slice() method returns a shallow copy of a portion of an array into a new array object selected from begin to end (end not included).
+* [`isNaN()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/isNaN) - The isNaN() function determines whether a value is NaN or not.
+
+
 ## License
+* [Health Data from my iPhone](https://github.com/levizimmerman/fe3-assessment-3) - Released under the [GNU General Public License, version 3.](https://opensource.org/licenses/GPL-3.0)
 
 [u_momentjs]: https://momentjs.com/
 [u_d3]: https://d3js.org/
