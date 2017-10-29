@@ -1,6 +1,9 @@
 # Health Data from my iPhone
 [Health app][u_app_health] from Apple is an iOS application that can measure different kinds activities of its OS user.
 
+## Demo
+Demo can be found [here](https://levizimmerman.github.io/fe3-assessment-3/)
+
 ## Background
 For this project I wanted to use personal data because I was curious if I could get some new insights about myself. Following the steps mentioned in the [workflow][u_workflow] I managed to display the data in four different bar charts:
 1. Step counts per day.
