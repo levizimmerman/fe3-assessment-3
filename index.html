@@ -11,22 +11,29 @@
 </head>
 
 <body>
-  <header id="timeFilter"></header>
+  <header class="group">
+    <div class="title">
+      <h1 class="title-text">
+        Comparison of sleepcycle and daily activities <br>
+        <small>Daily activities: stepcounts, flights climbed &amp; distance walked or ran</small>
+      </h1>
+    </div>
+    <div class="time-filter" id="timeFilter"></div>
+  </header>
   <main>
     <div>
-      <svg id="stepCount" width="600" height="150"></svg>
+      <svg id="stepCount"></svg>
     </div>
     <div>
-      <svg id="flightsClimbed" width="600" height="150"></svg>
+      <svg id="flightsClimbed"></svg>
     </div>
     <div>
-      <svg id="distanceWalkingRunning" width="600" height="150"></svg>
+      <svg id="distanceWalkingRunning"></svg>
     </div>
     <div>
-      <svg id="sleepCycle" width="600" height="250"></svg>
+      <svg id="sleepCycle"></svg>
     </div>
   </main>
-  <!-- <h1>Sample data</h1>
   <div class="loader">
     A moment please, Loading data...
     <div class="spinner">
@@ -36,7 +43,7 @@
       <div class="rect4"></div>
       <div class="rect5"></div>
     </div>
-  </div> -->
+  </div>
   <script src="./d3.js"></script>
   <script src="./moment.js"></script>
   <script src="./shared/events.js"></script>

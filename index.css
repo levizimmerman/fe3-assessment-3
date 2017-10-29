@@ -3,6 +3,9 @@ body {
   margin: 0;
   font-family: 'Droid Sans', sans-serif;
   background-color: #f5f5f5;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
 }
 
 main {
@@ -10,42 +13,46 @@ main {
 }
 
 /*
-* Table styles
+* SVG
 */
 
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 1rem 0;
+#stepCount .bar-label {
+  fill: #50E3C2;
 }
 
-h1 {
-  padding-bottom: 1rem;
-  border-bottom: 3px solid #ddd;
+#flightsClimbed .bar-label {
+  fill: #7ED321;
 }
 
-h2 {
-  margin-top: 2rem;
+#distanceWalkingRunning .bar-label {
+  fill: #4A90E2;
 }
 
-td {
-  border: 1px solid #aaa;
-  padding: 0.5rem;
-  font-size: 0.7rem;
+#sleepCycle .bar-label {
+  fill: #D0021B;
 }
 
-thead td {
-  text-transform: capitalize;
-  font-weight: bold;
-  background-color: #ddd;
+.bar {
+  cursor: pointer;
 }
 
-tbody td {
-  background: #e6f3f5;
+.bar.active {
+  opacity: 0.5;
 }
 
-tbody tr:nth-child(even) td {
-  background: #ffffff;
+.bar-label {
+  text-align: center;
+  fill: #333;
+  font-size: 12px;
+}
+
+.bar--sleep {
+  fill: #D0021B;
+}
+
+.mean-text {
+  font-size: 12px;
+  fill: #aaa;
 }
 
 /*
@@ -54,6 +61,10 @@ tbody tr:nth-child(even) td {
 
 .loader {
   text-align: center;
+  position: absolute;
+  top: 100px;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 .loader.hide {
@@ -74,7 +85,7 @@ tbody tr:nth-child(even) td {
 }
 
 .spinner>div {
-  background-color: #333;
+  background-color: #D0021B;
   height: 100%;
   width: 6px;
   display: inline-block;
@@ -123,14 +134,30 @@ tbody tr:nth-child(even) td {
   }
 }
 
-.indicator {
-  stroke: green;
-  stroke-width: 4px;
-  display: none;
+/*
+* Title styles
+*/
+
+.title {
+  float: left;
 }
 
-.indicator.active {
-  display: block;
+.title-text {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+  text-align: left;
+}
+
+.title-text small {
+  font-size: 0.67rem;
+  font-weight: 100;
+}
+
+.time-filter {
+  float: right;
+  width: 260px;
+  position: relative;
 }
 
 header {
@@ -138,6 +165,7 @@ header {
   padding: 1rem;
   position: relative;
   text-align: center;
+  box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 header button {
@@ -149,10 +177,90 @@ header button {
 .time-filter-prev,
 .time-filter-next {
   position: absolute;
+  width: 30px;
+  height: 30px;
+  border-radius: 4px;
+  border: 1pt solid red;
+  padding: 0;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.15s ease-in-out;
+  transform: scale(1);
+}
+
+.time-filter-prev:active,
+.time-filter-next:active {
+  transform: scale(0.94);
 }
 
 .time-filter-prev {
   left: 1rem;
+}
+
+.time-filter-prev::before,
+.time-filter-prev::after,
+.time-filter-next::before,
+.time-filter-next::after {
+  content: ' ';
+  display: block;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  background-position: center center;
+  background-repeat: no-repeat;
+  transition: transform 0.15s ease-in-out, opacity 0.15s ease-in-out;
+}
+
+.time-filter-prev::before,
+.time-filter-prev::after {
+  background-image: url('icon/nav-before.svg');
+}
+
+.time-filter-prev::before {
+  transform: translateX(0);
+  opacity: 0.5;
+}
+
+.time-filter-prev::after {
+  transform: translateX(50%);
+  opacity: 0;
+}
+
+.time-filter-prev:hover::before {
+  transform: translateX(-50%);
+  opacity: 0;
+}
+
+.time-filter-prev:hover::after {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.time-filter-next::before,
+.time-filter-next::after {
+  background-image: url('icon/nav-next.svg');
+}
+
+.time-filter-next::before {
+  transform: translateX(0);
+  opacity: 0.5;
+}
+
+.time-filter-next::after {
+  transform: translateX(-50%);
+  opacity: 0;
+}
+
+.time-filter-next:hover::before {
+  transform: translateX(50%);
+  opacity: 0;
+}
+
+.time-filter-next:hover::after {
+  transform: translateX(0);
+  opacity: 1;
 }
 
 .time-filter-next {
@@ -167,8 +275,8 @@ header button {
 
 .time-filter-pill {
   display: inline-block;
-  border: 1px solid #f00;
-  color: #f00;
+  border: 1px solid #D0021B;
+  color: #D0021B;
   position: relative;
   width: 70px;
   height: 30px;
@@ -184,13 +292,13 @@ header button {
   height: 100%;
   padding: 0;
   text-align: center;
-  color: #f00;
+  color: #D0021B;
   cursor: pointer;
 }
 
 .time-filter-pill:hover,
 .time-filter-pill.active {
-  background-color: #f00;
+  background-color: #D0021B;
 }
 
 .time-filter-pill:hover button,
@@ -206,4 +314,9 @@ header button {
   border-radius: 0px 4px 4px 0px;
 }
 
-.time-filter-pill button {}
+.group::before,
+.group::after {
+  content: ' ';
+  display: block;
+  clear: both;
+}
