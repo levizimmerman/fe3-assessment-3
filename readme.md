@@ -81,7 +81,7 @@ I have mentioned before that there are four types of `<Record>`, I have listed t
 ### Transforming data
 When a clean JSON object is created I transformed it to another JSON object where all entries are merged per day. All data types except for the SleepCycle can be merged easily.
 
-### Activities (StepCount, DistanceWalkingRunning, FlightsClimbed)
+#### Activities (StepCount, DistanceWalkingRunning, FlightsClimbed)
 Transforming all activity data I have used the [`d3.nest()`][u_d3_nest] function. Within this project I have applied this function as follows:
 ```javascript
 /*
@@ -104,7 +104,7 @@ self.mergeDataPerDay = function (data, type) {
 ```
 First level [key][u_d3_key] is unique, using the date string as ID. Then within the [rollup][u_d3_rollup] function the total sum of all values combined per day is returned. The [entries][u_d3_entries] function passes the data to the [nest][u_d3_nest] function.
 
-### Sleep Analysis (SleepCycle)
+#### Sleep Analysis (SleepCycle)
 It is a bit more complex to transform the SleepCycle data type. People tend to sleep before the new day begin, meaning sleeping before 00.00h and waking up the next day. So merging data per day requires a certain detection hours I could fall asleep and hours I could wake up. The code to do that looks as follows (comments explain the code):
 ```javascript
 /*
