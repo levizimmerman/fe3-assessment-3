@@ -1,6 +1,8 @@
 # Health Data from my iPhone
 [Health app][u_app_health] from Apple is an iOS application that can measure different kinds activities of its OS user.
 
+![preview](https://github.com/levizimmerman/fe3-assessment-3/blob/master/preview.png?raw=true)
+
 ## Demo
 Demo can be found [here](https://levizimmerman.github.io/fe3-assessment-3/)
 
