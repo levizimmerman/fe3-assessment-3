@@ -55,8 +55,7 @@ var SleepCycle = function (params) {
    * Set x and y scale based on the width and height of the SVG width and height attributes
    */
   self.x = d3.scaleTime()
-    .
-  range([10, self.width - self.margin.right]);
+    .range([10, self.width - self.margin.right]);
   self.y = d3.scaleTime()
     .range([self.height, 0]);
 
@@ -197,6 +196,7 @@ var SleepCycle = function (params) {
       .attr('width', currentWidthBar)
       .attr('y', currentyBarPosition)
       .attr('height', currentBarHeight)
+      .attr('data-date', dataDate)
       .transition()
       .duration(500)
       .attr('width', barWidth)
@@ -640,8 +640,10 @@ var SleepCycle = function (params) {
    * Adds text element above bar element display detailed information
    */
   function showDataOnBar(data) {
+    // console.log(data.point.key);
     var bar = self.svg.select('[data-date="' + data.point.key + '"]')
       .classed('active', true);
+    console.log(bar);
     self.svg.append('text')
       .attr('x', xTextPosition.bind(data.point))
       .attr('y', yTextPosition.bind(data.point))

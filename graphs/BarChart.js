@@ -152,6 +152,7 @@ var BarChart = function (params) {
     bar.attr('x', xCurrentPosition)
       .attr('y', yCurrentPosition)
       .attr('width', currentWidthBar)
+      .attr('data-date', dataDate)
       .transition()
       .duration(500)
       .attr('x', xBarPosition)
