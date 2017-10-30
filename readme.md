@@ -1,5 +1,5 @@
 # Health Data from my iPhone
-[Health app][u_app_health] from Apple is an iOS application that can measure different kinds activities of its OS user.
+[Health app][u_app_health] from Apple is an iOS application that measures different kind of activities of its OS user, like movement, sleep, diet, etc.
 
 ![preview](https://github.com/levizimmerman/fe3-assessment-3/blob/master/preview.png?raw=true)
 
@@ -7,27 +7,27 @@
 Demo can be found [here](https://levizimmerman.github.io/fe3-assessment-3/)
 
 ## Background
-For this project I wanted to use personal data because I was curious if I could get some new insights about myself. Following the steps mentioned in the [workflow][u_workflow] I managed to display the data in four different bar charts:
+For this project I wanted to use personal data because I was curious if I could get some new insights about myself. Following the steps mentioned in the [workflow][u_workflow] I managed to display data over four charts:
 1. Step counts per day.
 2. Flights climbed per day.
 3. Distance walked or ran per day.
 4. Sleep cycle per day.
 
-All the chart are displayed on the same x scale, namely time. Time was the only property that all data entries had in common. So when hovering over the chart with your cursor, more detailed information will be displayed. Detailed information includes the exact value of the bar and the difference (%) it has with the mean.
+All the bar charts are displayed on the same x scale, namely time. Time is the only property that all data entries (Step count, flights climbed, etc.) have in common. In this way it is possible to view and compare all data entries per day, per week or per month. More detailed information will be displayed when hovering one the of the bars with your curser. Detailed information includes the exact value meauserd, and how this value differs, in percentages, from the mean. The mean is a dashed line that is drawn for every time period you are viewing.
 
 ### Workflow
-These were the steps taken in general to create the data visualization:
-1. Export data - From the [Health app][u_app_health] I have exported a XML file.
-2. Import data - Using [`d3.xml()`][u_d3_xml] to load the data and add a mapping function to its callback.
-3. Clean data - Filters all `<Record>` from XML. For each `<Record>` attributes are selected and parsed.
-4. Transform data - Maps filtered data to a workable object.
-5. Create axis - Create y scale based on min and max values, and x scale based on date range (week or month).
-6. Create charts - Draws charts (bars) based on filtered and transformed data.
+Now I have explained the general idea of the data visualization. The stepts taken to work out the idea are as follows:
+1. Export data - Export an XML file from the [Health app][u_app_health].
+2. Import data - Use [`d3.xml()`][u_d3_xml] to load an XML file and map data within the callback.
+3. Clean data - Filter all `<Record>` elements found in the XML file. Select attributes for each `<Record>` and parse its value.
+4. Transform data - Map cleaned data to a workable JSON object.
+5. Create axis - Create y scale based on min and max values found in JSON object. Create x scale based on a range of dates (start date and end date).
+6. Create charts - Draw bar charts based on newly formed JSON object. Value of each entry is displayed on the y axis and the x position of each bar is a moment in time.
 7. Add transitions - Animate scale and bars when data is filtered or loaded.
-8. Add events - Events listeners are added to chart elements to add interaction to the visualization.
+8. Add events - Event listeners are added to chart elements to add interaction to the visualization.
 
 ## Data
-Within the [XML][u_xml] file I only select the `<Record>` elements. Then for each `<Record>` I filter out the attribute values I need.
+Within the [XML][u_xml] file I only selected the `<Record>` elements. Then for each `<Record>` element I filtered out the attributes and parse its value.
 
 ### Cleaning data
 I have used the following code to clean the XML and transform it to a JSON object:
@@ -42,7 +42,7 @@ data = [].map.call(data.querySelectorAll('Record'), function (record) {
   }
 });
 ```
-Example of the JSON object can look like this:
+Example of JSON output (viewing one data entry):
 ```json
 {
   "type": "stepCount",
@@ -53,7 +53,7 @@ Example of the JSON object can look like this:
 }
 ```
 
-I have mentioned before that there are four types of `<Record>`, I have listed there XML object below:
+There are four types of `<Record>` elements found within the [XML][u_xml]. Step count, flights climbed and distance walked or ran are practically the same. Down below are all types and their XML samples:
 1. [Step count data][u_step_count_data].
 2. [Flights climbed][u_flights_climbed_data].
 3. [Distance walked or ran data][u_distance_walked_or_ran_data].
@@ -87,7 +87,7 @@ I have mentioned before that there are four types of `<Record>`, I have listed t
 When a clean JSON object is created I transformed it to another JSON object where all entries are merged per day. All data types except for the SleepCycle can be merged easily.
 
 #### Activities (StepCount, DistanceWalkingRunning, FlightsClimbed)
-Transforming all activity data I have used the [`d3.nest()`][u_d3_nest] function. Within this project I have applied this function as follows:
+To transform all activity data I use the [`d3.nest()`][u_d3_nest] function. Within this project I apply this function as follows:
 ```javascript
 /*
  * Returns data merged, where all entries are merged to a day and stored as array element
@@ -107,10 +107,10 @@ self.mergeDataPerDay = function (data, type) {
   return dataPerDay;
 };
 ```
-First level [key][u_d3_key] is unique, using the date string as ID. Then within the [rollup][u_d3_rollup] function the total sum of all values combined per day is returned. The [entries][u_d3_entries] function passes the data to the [nest][u_d3_nest] function.
+All entries will be on the same level. Every entry is identified by its date, which is transformed to a locale date string. Using the [key][u_d3_key] function of D3 we can use the locale date string as key for each entry. Then within the [rollup][u_d3_rollup] function the total sum of all values combined per day is returned. The [entries][u_d3_entries] function passes the data to the [nest][u_d3_nest] function.
 
 #### Sleep Analysis (SleepCycle)
-It is a bit more complex to transform the SleepCycle data type. People tend to sleep before the new day begin, meaning sleeping before 00.00h and waking up the next day. So merging data per day requires a certain detection hours I could fall asleep and hours I could wake up. The code to do that looks as follows (comments explain the code):
+It is a bit more complex to transform the SleepCycle data type. People tend to sleep before the new day begin, meaning sleeping before 00.00h and waking up the next day. So merging data per day requires a certain detection of hours I could fall asleep and hours I could wake up. The code to do that looks as follows (comments explain the code):
 ```javascript
 /*
  * Returns sleep cycle data merged per day
@@ -159,19 +159,19 @@ self.createSleepCyclePerDay = function (data, minThreshold, maxThreshold) {
 ```
 
 ### Interaction with data
-After all the transforming and cleaning is done, the data is drawn as a bar chart. Drawing bar chart with a standard [Enter, Update, Exit][u_general_enter_update_exit_pattern] pattern is not that exciting the highlight in this documentation. What is exciting is the filtering and bar interaction that is added to this project. The following interactions are possible:
+After all the transforming and cleaning is done, the data is drawn as a bar chart. Drawing a bar chart with a standard [Enter, Update, Exit][u_general_enter_update_exit_pattern] pattern is not that exciting to highlight in this documentation. That is why I [refer][[u_general_enter_update_exit_pattern] to a simple example of that pattern. What is exciting is the filtering and bar interaction that is added to this project. The following interactions are possible:
 1. [Switch filter type][u_switch_filter] - View data per week or per month.
 2. [Navigate filter type][u_nav_filter] - Navigate to next or previous type of timeframe (week or month).
 3. [Hover the bar][u_hover_bar] - View detailed information about each day by hovering a bar with your cursor.
 
 #### Switch filter type
-[`timeFilter.js`][u_timefilter] Adds two filter type button to the HTML. This includes filtering on 'week' and 'month'. When clicking on one of these buttons an event will be emited using [Events.js][u_events].
+[`timeFilter.js`][u_timefilter] Adds two filter type buttons to the DOM. This includes filtering on 'week' and 'month'. When clicking on one of these buttons an event will be emited using [Events.js][u_events].
 ```javascript
 Events.emit('timefilter/select', {
   type: 'month'
 });
 ```
-Using the pub sub pattern the created instances ([BarChart][u_barchart] and [SleepCycle][u_sleepcycle]) trigger their subscription to this event and will filter the data accordingly. After filtering the data, the visualization will be redrawn within the every instance.
+Using the pub sub pattern the created instances ([BarChart][u_barchart] and [SleepCycle][u_sleepcycle]) trigger their subscription to this event and will filter the data accordingly. After filtering the data, the visualization will be redrawn within every instance.
 
 ##### BarChart.js filter type selection event subscription
 ```javascript
@@ -225,11 +225,11 @@ function handleTimeFilterSelect(data) {
 ```
 
 #### Navigate filter type
-[`timeFilter.js`][u_timefilter] Adds two filter navigation buttons to the HTML. This includes next and previous type of time frame ('week' or 'month'). When clicking on one of these buttons an event will be emited using [Events.js][u_events].
+[`timeFilter.js`][u_timefilter] Adds two filter navigation buttons to the DOM. This includes next and previous type of time frame ('week' or 'month'). When clicking on one of these buttons an event will be emited using [Events.js][u_events].
 ```javascript
 Events.emit('timefilter/nav');
 ```
-Using the pub sub pattern the created instances ([BarChart][u_barchart] and [SleepCycle][u_sleepcycle]) trigger their subscription to this event and will filter the data accordingly. After filtering the data, the visualization will be redrawn within the every instance.
+Using the pub sub pattern the created instances ([BarChart][u_barchart] and [SleepCycle][u_sleepcycle]) trigger their subscription to this event and will filter the data accordingly. After filtering the data, the visualization will be redrawn within every instance.
 
 ##### BarChart.js filter navigate event subscription
 ```javascript
@@ -283,14 +283,14 @@ function handleTimeFilterNav() {
 ```
 
 #### Hover the bar
-`mouseover` Events listeners are added to every bar in each chart. Within the handler function bound to the event listener an event is emitted using [Events.js][u_events]. The events looks as follows:
+`mouseover` Events listeners are added to every bar in each chart. Within the handler function bound to the event listener an event is emitted using [Events.js][u_events]. The event looks as follows:
 ```javascript
 Events.emit('bar/on/mouseover', {
   point: data
 });
 ```
 
-The variable `data` is the data passed from the bar element which is hovered. This data object has a date in it. This date is used to call other bars that have same date. Then in their turn these bars will display their detailed information. Every instance ([BarChart][u_barchart] and [SleepCycle][u_sleepcycle]) is subscribed to the `bar/on/mouseover` event.
+The variable `data` is the data passed from the bar element which is hovered. This data object has a date as property. This date is used to call other bars that have same date. Then in their turn these bars will display their detailed information. Every instance ([BarChart][u_barchart] and [SleepCycle][u_sleepcycle]) is subscribed to the `bar/on/mouseover` event.
 
 ##### BarChart.js bar mouseover event subscription
 ```javascript
@@ -310,7 +310,7 @@ function markBar(data) {
     .text(getTextLabel.bind(data.point));
 }
 ```
-The bar is marked by adding a `active` classname. Then a `<text>` element is added to hold detailed information about the bar. This detailed information is the exact value of bar and the percentage the value differs from the mean of the whole chart.
+The bar is marked by adding a `active` classname. Then a `<text>` element is added to hold detailed information about the bar. This detailed information is the exact value of bar and the percentage the value differs from the mean of the whole chart (e.g. '+5.1% (32)')
 ```javascript
 /*
  * Returns text label content
@@ -348,7 +348,7 @@ function showDataOnBar(data) {
     .text(getTextLabel.bind(data.point));
 }
 ```
-The bar is marked by adding a `active` classname. Then a `<text>` element is added to hold detailed information about the bar. This detailed information is the time slept and the percentage the slept time differs from the slept mean of the whole chart.
+The bar is marked by adding a `active` classname. Then a `<text>` element is added to hold detailed information about the bar. This detailed information is the time slept and the percentage the slept time differs from the slept mean of the whole chart. (e.g. '-7.5% (6.7h)')
 ```javascript
 /*
  * Returns text content
